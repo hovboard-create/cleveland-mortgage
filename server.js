@@ -1,14 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
-import fs from 'fs';
 import { fileURLToPath } from 'url';
 import nodemailer from 'nodemailer';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3011;
-const CSV_FILE = path.join(__dirname, 'leads.csv');
 
 // Initialize email transporter
 let transporter = null;
@@ -33,15 +31,6 @@ function initializeEmail() {
   console.log('✅ Email transporter initialized');
 }
 
-// Initialize CSV file with headers if it doesn't exist
-function initializeCSV() {
-  if (!fs.existsSync(CSV_FILE)) {
-    const headers = 'timestamp,goal,property_value,credit_score,name,email,phone,consent\n';
-    fs.writeFileSync(CSV_FILE, headers);
-    console.log('📄 CSV file created');
-  }
-}
-
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -60,7 +49,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// POST /api/leads - Save lead and send email
+// POST /api/leads - Send email notification
 app.post('/api/leads', async (req, res) => {
   try {
     console.log('📝 Received lead submission');
@@ -85,11 +74,6 @@ app.post('/api/leads', async (req, res) => {
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
-    // Save to CSV
-    const csvRow = `${timestamp || new Date().toISOString()},"${goal || ''}","${value || ''}","${credit || ''}","${name}","${email}","${phone}",${consent}\n`;
-    fs.appendFileSync(CSV_FILE, csvRow);
-    console.log(`✅ Lead saved to CSV`);
-
     // Send email if transporter is configured
     if (transporter) {
       try {
@@ -109,16 +93,21 @@ app.post('/api/leads', async (req, res) => {
             <p><strong>Consent Given:</strong> ${consent ? 'Yes' : 'No'}</p>
           `
         });
-        console.log(`📧 Email sent to hovboard@gmail.com`);
+        console.log(`✅ Email sent to hovboard@gmail.com for ${name}`);
       } catch (emailError) {
         console.error('❌ Error sending email:', emailError.message);
-        // Continue anyway - lead is saved to CSV
+        return res.status(500).json({
+          error: 'Failed to send notification email',
+          message: emailError.message
+        });
       }
+    } else {
+      console.log('⚠️  Email not configured, lead received but notification not sent');
     }
 
     res.json({
       success: true,
-      message: 'Lead saved and notification sent'
+      message: 'Lead received and notification sent'
     });
   } catch (error) {
     console.error('❌ Error processing lead:', error.message);
@@ -134,19 +123,16 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    emailConfigured: transporter ? 'yes' : 'no',
-    csvReady: fs.existsSync(CSV_FILE) ? 'yes' : 'no'
+    emailConfigured: transporter ? 'yes' : 'no'
   });
 });
 
 // Initialize
 initializeEmail();
-initializeCSV();
 
 app.listen(PORT, () => {
   console.log(`\n🏠 Cleveland Mortgage Backend`);
   console.log(`Port: ${PORT}`);
-  console.log(`CSV Storage: ${CSV_FILE}`);
   console.log(`\n📡 API Endpoints:`);
   console.log(`  POST   /api/leads`);
   console.log(`  GET    /api/health\n`);
