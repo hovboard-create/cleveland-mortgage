@@ -1,0 +1,6 @@
+timestamp,goal,property_value,credit_score,name,email,phone,consent
+2026-05-26T16:30:00Z,"Buying","250k-350k","excellent","Maria Garcia","maria@example.com","216-555-4321",true
+2026-05-26T16:41:00Z,"Refinance","300k-400k","good","Lead #1","lead1@example.com","216-555-0001",true
+2026-05-26T16:42:00Z,"Refinance","300k-400k","good","Lead #2","lead2@example.com","216-555-0002",true
+2026-05-26T17:00:00Z,"Cash-Out Refinance","400k-500k","good","Final Test Lead","final@example.com","216-555-9876",true
+2026-05-27T02:15:00Z,"Buying","300k-400k","excellent","Ready to Launch","test@example.com","216-555-7777",true

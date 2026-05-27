@@ -1,0 +1,19 @@
+
+> cleveland-mortgage-backend@1.0.0 start
+> node server.js
+
+Email notifications disabled (set EMAIL_USER and EMAIL_PASSWORD env vars)
+
+🏠 Cleveland Mortgage Backend
+Port: 3011
+CSV: /Users/jonathan/code/cleveland-mortgage/leads.csv
+Excel: /Users/jonathan/code/cleveland-mortgage/leads.xlsx
+
+📡 API Endpoints:
+  POST   /api/leads
+  GET    /api/leads/count
+  GET    /api/leads/download
+  GET    /api/leads/download-excel
+  GET    /api/health
+
+[2026-05-27T02:02:53.118Z] New lead: Ready to Launch (test@example.com) → CSV & Excel
