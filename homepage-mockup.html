@@ -282,6 +282,12 @@
   .done h3{font-size:1.6rem;margin-bottom:8px}
   .done p{color:var(--ink-soft);max-width:34ch;margin:0 auto}
   .trust-badges{display:flex;gap:14px;justify-content:center;margin-top:18px;font-size:.7rem;color:var(--ink-soft);font-weight:600}
+  /* Mobile sticky CTA button */
+  .mbar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(247,242,232,.96);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:11px 16px;display:none;align-items:center;gap:12px;box-shadow:0 -8px 24px -16px rgba(0,0,0,.4);safe-area-inset-bottom:auto}
+  .mbar .lbl{font-size:.8rem;font-weight:600;line-height:1.2}
+  .mbar .lbl b{display:block;font-family:"Fraunces";font-size:.98rem;color:var(--ink)}
+  .mbar .btn{margin-left:auto;padding:.7em 1.2em}
+  @media(max-width:960px){.mbar{display:flex}body{padding-bottom:72px}}
 </style>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-C13X2QJTTQ"></script>
@@ -433,21 +439,21 @@
         <div>Lender</div><div>Best for</div><div>Highlight</div><div></div>
       </div>
       <div class="crow feat">
-        <div class="lender"><span class="av">CM</span> Featured Partner <span class="pill">Top match</span></div>
+        <div class="lender"><span class="av">FN</span> First National Home Loans <span class="pill">Top match</span></div>
         <div class="for">Cleveland buyers &amp; refi</div>
         <div class="meta">Local underwriting</div>
         <div class="act"><button class="btn btn-primary" onclick="openFlow()">Get Quote</button></div>
       </div>
       <div class="crow">
-        <div class="lender"><span class="av">B</span> Lender B</div>
+        <div class="lender"><span class="av">FH</span> FHA Home Mortgage</div>
         <div class="for">First-time buyers</div>
         <div class="meta">Low down payment</div>
         <div class="act"><button class="btn btn-ghost" onclick="openFlow()">Check Rate</button></div>
       </div>
       <div class="crow">
-        <div class="lender"><span class="av">C</span> Lender C</div>
-        <div class="for">Investors / DSCR</div>
-        <div class="meta">No income docs</div>
+        <div class="lender"><span class="av">IP</span> Investment Property Lenders</div>
+        <div class="for">Investors &amp; DSCR</div>
+        <div class="meta">Flexible qualification</div>
         <div class="act"><button class="btn btn-ghost" onclick="openFlow()">Check Rate</button></div>
       </div>
       <div class="compare-foot"><a href="#">See the full comparison &rarr;</a></div>
@@ -540,18 +546,18 @@
       <h2>From the Cleveland Mortgage blog</h2>
     </div>
     <div class="posts">
-      <article class="post">
+      <a href="#" class="post">
         <div class="thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 15l5-5 4 4 5-5 4 4"/><circle cx="8.5" cy="8.5" r="1.5"/></svg><span class="ph">Image + video</span></div>
         <div class="body"><span class="cat">First-Time Buyers</span><h3>FHA vs. Conventional for a Cleveland buyer</h3><p>Which loan wins in Cuyahoga County — and how to decide.</p></div>
-      </article>
-      <article class="post">
+      </a>
+      <a href="#" class="post">
         <div class="thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 15l5-5 4 4 5-5 4 4"/><circle cx="8.5" cy="8.5" r="1.5"/></svg><span class="ph">Image + video</span></div>
         <div class="body"><span class="cat">Refinance</span><h3>Is now a good time to refinance in Ohio?</h3><p>The math on breaking even — with current local context.</p></div>
-      </article>
-      <article class="post">
+      </a>
+      <a href="#" class="post">
         <div class="thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 15l5-5 4 4 5-5 4 4"/><circle cx="8.5" cy="8.5" r="1.5"/></svg><span class="ph">Image + video</span></div>
         <div class="body"><span class="cat">Investors</span><h3>DSCR loans for Cleveland rental properties</h3><p>How out-of-state investors finance cash-flowing rentals.</p></div>
-      </article>
+      </a>
     </div>
   </div>
 </section>
@@ -658,7 +664,7 @@
         <div class="field"><label>Full name</label><input type="text" placeholder="Jane Doe" id="inputName" onchange="window.answers.name=this.value"></div>
         <div class="field"><label>Email</label><input type="email" placeholder="jane@email.com" id="inputEmail" onchange="window.answers.email=this.value"></div>
         <div class="field"><label>Phone</label><input type="tel" placeholder="(216) 555-0142" id="inputPhone" onchange="window.answers.phone=this.value"></div>
-        <label class="consent"><input type="checkbox" id="consent" checked> <span>By checking this box, I agree to be contacted by Cleveland Mortgage and its lending partner(s) at the number provided, including by autodialer and prerecorded messages, about mortgage options. Consent is not a condition of purchase. Msg/data rates may apply. <a href="#" style="color:var(--brick)">Privacy Policy</a>.</span></label>
+        <label class="consent"><input type="checkbox" id="consent" checked> <span>By checking this box, I agree to be contacted by Cleveland Mortgage and its lending partner(s) at the number provided, including by autodialer and prerecorded messages, about mortgage options. Consent is not a condition of purchase. Msg/data rates may apply. <a href="/privacy-policy.html" style="color:var(--brick)">Privacy Policy</a>.</span></label>
         <div class="mnav"><button class="back btn" onclick="prev()">Back</button><button class="btn btn-primary" onclick="submitFlow()">See My Options</button></div>
       </div>
 
@@ -787,5 +793,14 @@
     if(!open){ qa.classList.add('open'); ans.style.maxHeight=ans.scrollHeight+'px'; }
   }
 </script>
+
+<!-- Mobile sticky CTA bar -->
+<div class="mbar">
+  <div class="lbl">
+    <span>Ready to find your rate?</span>
+    <b>Get your free quote</b>
+  </div>
+  <button class="btn btn-primary" onclick="openFlow()">Start Now</button>
+</div>
 </body>
 </html>
