@@ -17,12 +17,22 @@ let sheets = null;
 // Initialize Google Sheets API
 async function initializeGoogleSheets() {
   try {
-    const credentials = JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS || '{}');
+    console.log('🔍 Attempting to initialize Google Sheets...');
+    const credentialsJson = process.env.GOOGLE_SHEETS_CREDENTIALS;
 
-    if (!credentials.type) {
-      console.log('⚠️  Google Sheets credentials not configured');
+    if (!credentialsJson) {
+      console.log('⚠️  GOOGLE_SHEETS_CREDENTIALS environment variable not set');
       return;
     }
+
+    const credentials = JSON.parse(credentialsJson);
+
+    if (!credentials.type) {
+      console.log('⚠️  Google Sheets credentials missing type field');
+      return;
+    }
+
+    console.log('📝 Credentials parsed. Project:', credentials.project_id);
 
     const auth = new google.auth.GoogleAuth({
       credentials: credentials,
@@ -30,9 +40,10 @@ async function initializeGoogleSheets() {
     });
 
     sheets = google.sheets({ version: 'v4', auth });
-    console.log('✅ Google Sheets API initialized');
+    console.log('✅ Google Sheets API initialized successfully');
   } catch (error) {
     console.error('❌ Error initializing Google Sheets:', error.message);
+    console.error('Stack:', error.stack);
   }
 }
 
@@ -101,8 +112,13 @@ app.post('/api/leads', async (req, res) => {
       updates: response.data.updates
     });
   } catch (error) {
-    console.error('Error saving lead:', error);
-    res.status(500).json({ error: 'Server error while saving lead', details: error.message });
+    console.error('Error saving lead:', error.message);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({
+      error: 'Server error while saving lead',
+      details: error.message,
+      sheetsInitialized: sheets ? 'yes' : 'no'
+    });
   }
 });
 
@@ -111,7 +127,8 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    sheetsInitialized: sheets ? true : false
+    sheetsInitialized: sheets ? 'yes' : 'no',
+    credentialsSet: process.env.GOOGLE_SHEETS_CREDENTIALS ? 'yes' : 'no'
   });
 });
 
