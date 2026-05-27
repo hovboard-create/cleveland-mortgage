@@ -655,9 +655,9 @@
       <div class="stepw" data-step="4">
         <span class="stp">Step 4 of 4 · Almost done</span>
         <h3>Where do we send your options?</h3>
-        <div class="field"><label>Full name</label><input type="text" placeholder="Jane Doe"></div>
-        <div class="field"><label>Email</label><input type="email" placeholder="jane@email.com"></div>
-        <div class="field"><label>Phone</label><input type="tel" placeholder="(216) 555-0142"></div>
+        <div class="field"><label>Full name</label><input type="text" id="name" placeholder="Jane Doe"></div>
+        <div class="field"><label>Email</label><input type="email" id="email" placeholder="jane@email.com"></div>
+        <div class="field"><label>Phone</label><input type="tel" id="phone" placeholder="(216) 555-0142"></div>
         <label class="consent"><input type="checkbox" id="consent"> <span>By checking this box, I agree to be contacted by Cleveland Mortgage and its lending partner(s) at the number provided, including by autodialer and prerecorded messages, about mortgage options. Consent is not a condition of purchase. Msg/data rates may apply. <a href="#" style="color:var(--brick)">Privacy Policy</a>.</span></label>
         <div class="mnav"><button class="back btn" onclick="prev()">Back</button><button class="btn btn-primary" onclick="submitFlow()">See My Options</button></div>
       </div>
@@ -714,10 +714,51 @@
     document.querySelectorAll('.stepw').forEach(s=>s.classList.toggle('active', +s.dataset.step===step));
     document.getElementById('bar').style.width=(step/4*100)+'%';
   }
-  function submitFlow(){
-    if(!document.getElementById('consent').checked){ alert('Please agree to the consent terms to continue.'); return; }
-    step=5; document.querySelectorAll('.stepw').forEach(s=>s.classList.toggle('active', +s.dataset.step===5));
-    document.getElementById('bar').style.width='100%';
+  async function submitFlow(){
+    if(!document.getElementById('consent').checked){ 
+      alert('Please agree to the consent terms to continue.'); 
+      return; 
+    }
+    
+    // Get form data
+    const name = document.getElementById('name')?.value || '';
+    const email = document.getElementById('email')?.value || '';
+    const phone = document.getElementById('phone')?.value || '';
+    const goal = window.answers?.goal || '';
+    const value = window.answers?.value || '';
+    const credit = window.answers?.credit || '';
+    
+    // Validate required fields
+    if(!name || !email || !phone){
+      alert('Please fill in all required fields (name, email, phone)');
+      return;
+    }
+    
+    try {
+      // Send to backend
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          timestamp: new Date().toISOString(),
+          name, email, phone, goal, value, credit,
+          consent: true
+        })
+      });
+      
+      if(response.ok){
+        // Show success screen (step 5)
+        step=5; 
+        document.querySelectorAll('.stepw').forEach(s=>s.classList.toggle('active', +s.dataset.step===5));
+        document.getElementById('bar').style.width='100%';
+      } else {
+        const error = await response.json();
+        alert('Error submitting form: ' + (error.error || 'Unknown error'));
+      }
+    } catch(err){
+      alert('Network error. Please try again. ' + err.message);
+      console.error(err);
+    }
   }
   // close on overlay click
   document.getElementById('overlay').addEventListener('click',e=>{ if(e.target.id==='overlay') closeFlow(); });
