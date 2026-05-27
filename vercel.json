@@ -1,14 +1,15 @@
 {
-  "buildCommand": "npm install",
-  "outputDirectory": ".",
-  "devCommand": "npm start",
-  "env": {
-    "NODE_ENV": "production",
-    "PORT": "3011"
-  },
-  "functions": {
-    "server.js": {
-      "maxDuration": 60
+  "version": 2,
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node"
     }
-  }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "server.js"
+    }
+  ]
 }

@@ -32,7 +32,20 @@ if (EMAIL_USER && EMAIL_PASSWORD) {
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname)); // Serve static HTML files
+
+// Serve static HTML files from the project root
+app.use(express.static(__dirname, {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.html')) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    }
+  }
+}));
+
+// Root route - serve index.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 const CSV_FILE = path.join(__dirname, 'leads.csv');
 const EXCEL_FILE = path.join(__dirname, 'leads.xlsx');
