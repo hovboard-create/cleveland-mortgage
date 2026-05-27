@@ -1,49 +1,44 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { GoogleSpreadsheet } from 'google-spreadsheet';
-import { JWT } from 'google-auth-library';
+import nodemailer from 'nodemailer';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3011;
+const CSV_FILE = path.join(__dirname, 'leads.csv');
 
-// Google Sheets configuration
-const SHEET_ID = '1VXVPjITuKAYE6-iMkWsn0n7UTfMtqjEtu_9vOLF1leY';
+// Initialize email transporter
+let transporter = null;
 
-let doc = null;
+function initializeEmail() {
+  const emailUser = process.env.EMAIL_USER;
+  const emailPassword = process.env.EMAIL_PASSWORD;
 
-// Initialize Google Sheets
-async function initializeGoogleSheets() {
-  try {
-    console.log('🔍 Initializing Google Sheets...');
+  if (!emailUser || !emailPassword) {
+    console.log('⚠️  EMAIL_USER or EMAIL_PASSWORD not set - email notifications disabled');
+    return;
+  }
 
-    const credentialsJson = process.env.GOOGLE_SHEETS_CREDENTIALS;
-    if (!credentialsJson) {
-      console.log('⚠️  GOOGLE_SHEETS_CREDENTIALS not set');
-      return;
+  transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: emailUser,
+      pass: emailPassword
     }
+  });
 
-    const credentials = JSON.parse(credentialsJson);
-    console.log('📝 Credentials loaded. Project:', credentials.project_id);
+  console.log('✅ Email transporter initialized');
+}
 
-    const serviceAccountAuth = new JWT({
-      email: credentials.client_email,
-      key: credentials.private_key,
-      scopes: [
-        'https://www.googleapis.com/auth/spreadsheets',
-        'https://www.googleapis.com/auth/drive'
-      ],
-    });
-
-    doc = new GoogleSpreadsheet(SHEET_ID, serviceAccountAuth);
-
-    await doc.loadInfo();
-    console.log('✅ Google Sheets initialized. Title:', doc.title);
-  } catch (error) {
-    console.error('❌ Error initializing Google Sheets:', error.message);
-    console.error('Stack:', error.stack);
+// Initialize CSV file with headers if it doesn't exist
+function initializeCSV() {
+  if (!fs.existsSync(CSV_FILE)) {
+    const headers = 'timestamp,goal,property_value,credit_score,name,email,phone,consent\n';
+    fs.writeFileSync(CSV_FILE, headers);
+    console.log('📄 CSV file created');
   }
 }
 
@@ -65,12 +60,10 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// POST /api/leads - Save lead to Google Sheets
+// POST /api/leads - Save lead and send email
 app.post('/api/leads', async (req, res) => {
   try {
-    if (!doc) {
-      return res.status(500).json({ error: 'Google Sheets not initialized' });
-    }
+    console.log('📝 Received lead submission');
 
     const { timestamp, goal, value, credit, name, email, phone, consent } = req.body;
 
@@ -92,34 +85,46 @@ app.post('/api/leads', async (req, res) => {
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
-    // Get the first sheet
-    const sheet = doc.sheetsByIndex[0];
+    // Save to CSV
+    const csvRow = `${timestamp || new Date().toISOString()},"${goal || ''}","${value || ''}","${credit || ''}","${name}","${email}","${phone}",${consent}\n`;
+    fs.appendFileSync(CSV_FILE, csvRow);
+    console.log(`✅ Lead saved to CSV`);
 
-    // Add row to sheet
-    const result = await sheet.addRow({
-      Timestamp: timestamp,
-      Goal: goal || '',
-      'Property Value': value || '',
-      'Credit Score': credit || '',
-      Name: name,
-      Email: email,
-      Phone: phone,
-      Consent: consent
-    });
-
-    console.log(`[${new Date().toISOString()}] New lead: ${name} (${email}) → Google Sheets`);
+    // Send email if transporter is configured
+    if (transporter) {
+      try {
+        await transporter.sendMail({
+          from: process.env.EMAIL_USER,
+          to: 'hovboard@gmail.com',
+          subject: `New Cleveland Mortgage Lead: ${name}`,
+          html: `
+            <h2>New Lead Submission</h2>
+            <p><strong>Name:</strong> ${name}</p>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Phone:</strong> ${phone}</p>
+            <p><strong>Goal:</strong> ${goal || 'Not specified'}</p>
+            <p><strong>Property Value:</strong> ${value || 'Not specified'}</p>
+            <p><strong>Credit Score:</strong> ${credit || 'Not specified'}</p>
+            <p><strong>Timestamp:</strong> ${timestamp || new Date().toISOString()}</p>
+            <p><strong>Consent Given:</strong> ${consent ? 'Yes' : 'No'}</p>
+          `
+        });
+        console.log(`📧 Email sent to hovboard@gmail.com`);
+      } catch (emailError) {
+        console.error('❌ Error sending email:', emailError.message);
+        // Continue anyway - lead is saved to CSV
+      }
+    }
 
     res.json({
       success: true,
-      message: 'Lead saved to Google Sheets',
-      rowId: result.rowNumber
+      message: 'Lead saved and notification sent'
     });
   } catch (error) {
-    console.error('Error saving lead:', error.message);
-    console.error('Stack:', error.stack);
+    console.error('❌ Error processing lead:', error.message);
     res.status(500).json({
-      error: 'Server error while saving lead',
-      details: error.message
+      error: 'Server error while processing lead',
+      message: error.message
     });
   }
 });
@@ -129,17 +134,19 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    sheetsInitialized: doc ? 'yes' : 'no'
+    emailConfigured: transporter ? 'yes' : 'no',
+    csvReady: fs.existsSync(CSV_FILE) ? 'yes' : 'no'
   });
 });
 
-// Start server
-await initializeGoogleSheets();
+// Initialize
+initializeEmail();
+initializeCSV();
 
 app.listen(PORT, () => {
   console.log(`\n🏠 Cleveland Mortgage Backend`);
   console.log(`Port: ${PORT}`);
-  console.log(`Google Sheet ID: ${SHEET_ID}`);
+  console.log(`CSV Storage: ${CSV_FILE}`);
   console.log(`\n📡 API Endpoints:`);
   console.log(`  POST   /api/leads`);
   console.log(`  GET    /api/health\n`);
