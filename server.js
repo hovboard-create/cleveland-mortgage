@@ -35,6 +35,18 @@ function initializeEmail() {
 app.use(cors());
 app.use(express.json());
 
+// Redirect www to non-www (canonical domain)
+app.use((req, res, next) => {
+  const host = req.get('host') || req.get('x-forwarded-host') || '';
+  if (host.startsWith('www.')) {
+    const protocol = req.get('x-forwarded-proto') || 'https';
+    const newHost = host.replace(/^www\./, '');
+    const redirectUrl = `${protocol}://${newHost}${req.originalUrl}`;
+    return res.redirect(301, redirectUrl);
+  }
+  next();
+});
+
 // Serve static HTML files
 app.use(express.static(__dirname, {
   setHeaders: (res, path) => {
