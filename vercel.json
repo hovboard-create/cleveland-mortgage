@@ -32,6 +32,10 @@
       "dest": "/robots.txt"
     },
     {
+      "src": "/sell-my-home/?$",
+      "dest": "/sell-my-home/index.html"
+    },
+    {
       "src": "/(.*\\.html)",
       "dest": "/$1"
     },
